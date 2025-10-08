@@ -2,39 +2,68 @@ import subprocess
 import sys
 from datetime import datetime
 
+
 def run_tests():
+    fechaHora = datetime.now()
     try:
-        fechaHora = datetime.now()
         subprocess.check_call([sys.executable, "-m", "pytest", "-q", "-v"])
         return f"✅ {fechaHora} - Tests correctos"
     except subprocess.CalledProcessError:
-        fechaHora = datetime.now()
         return f"❌ {fechaHora} - Tests fallidos"
+
 
 def update_readme(status: str):
     with open("README.md", "r", encoding="utf-8") as f:
         lines = f.readlines()
 
-    new_lines = []
-    for line in lines:
-        new_lines.append(line)
+    for i, line in enumerate(lines):
         if line.strip() == "## Estado de los tests":
-            new_lines.append(status + "\n")
+            
+            if i + 1 < len(lines):
+                lines[i + 1] = status + "\n"
+            else:
+                lines.append(status + "\n")
+            break
 
     with open("README.md", "w", encoding="utf-8") as f:
-        f.writelines(new_lines)
+        f.writelines(lines)
 
-def update_reportmd(lines):
+
+def update_reportmd(status: str):
+    total, correctos, fallidos = leer_historial()
+
+    if "✅" in status:
+        correctos += 1
+    else:
+        fallidos += 1
+    total = correctos + fallidos
+
     with open("report.md", "r", encoding="utf-8") as f:
         lines = f.readlines()
 
-    new_lines = []
-    for line in lines:
-        new_lines.append(line)
-    new_lines.append(status + "\n")
+    resumen = f"### Test realizados hasta ahora: {total} ({correctos} correctos, {fallidos} fallidos)\n"
+    lines[1] = resumen
+    lines.append("\n" + status + "\n")
 
     with open("report.md", "w", encoding="utf-8") as f:
-        f.writelines(new_lines)
+        f.writelines(lines)
+
+
+def leer_historial():
+    correctos = 0
+    fallidos = 0
+    total = 0
+
+    with open("report.md", "r", encoding="utf-8") as f:
+        for line in f:
+            if "✅" in line:
+                correctos += 1
+            elif "❌" in line:
+                fallidos += 1
+    total = correctos + fallidos
+
+    return total, correctos, fallidos
+
 
 if __name__ == "__main__":
     status = run_tests()
