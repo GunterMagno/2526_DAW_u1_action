@@ -4,12 +4,12 @@ from datetime import datetime
 
 def run_tests():
     try:
-        fechaHora = datetime.datetime.now()
-        subprocess.check_call(["pytest", "-q", "-v"])
-
-        return "✅ " + fechaHora + " - Tests correctos"
+        fechaHora = datetime.now()
+        subprocess.check_call([sys.executable, "-m", "pytest", "-q", "-v"])
+        return f"✅ {fechaHora} - Tests correctos"
     except subprocess.CalledProcessError:
-        return "❌ " + fechaHora + " - Tests fallidos"
+        fechaHora = datetime.now()
+        return f"❌ {fechaHora} - Tests fallidos"
 
 def update_readme(status: str):
     with open("README.md", "r", encoding="utf-8") as f:
