@@ -34,16 +34,23 @@ jobs:
           file_pattern: README.md report.md
 
       - name: Notificar resultado en Discord
-        if: always()   # se ejecuta aunque los tests fallen
+        if: always()
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
-          if grep -q "✅" README.md; then
-            curl -H "Content-Type: application/json" \
-                 -d '{"content": "✅ Tests correctos en el último commit"}' \
-                 $DISCORD_WEBHOOK
-          else
-            curl -H "Content-Type: application/json" \
-                 -d '{"content": "❌ Tests fallidos en el último commit"}' \
-                 $DISCORD_WEBHOOK
-          fi
+          python - <<EOF
+          import os
+          import requests
+
+          webhook = os.environ["DISCORD_WEBHOOK"]
+
+          with open("README.md", "r", encoding="utf-8") as f:
+              contenido = f.read()
+
+          if "✅" in contenido:
+              mensaje = "✅ Tests correctos en el último commit"
+          else:
+              mensaje = "❌ Tests fallidos en el último commit"
+
+          requests.post(webhook, json={"content": mensaje})
+        EOF
